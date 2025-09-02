@@ -1,11 +1,10 @@
 %skeleton "lalr1.cc"
 %require  "3.0"
-%debug 
 %defines 
 %define api.namespace {verilog}
 %define api.parser.class {VerilogParser}
 
-%define parse.error verbose
+%define parse.error simple
 
 %code requires{
   #include "verilog_data.hpp"
@@ -44,8 +43,6 @@
 }
 
 %define api.value.type variant
-%define parse.assert
-
 
 %left '-' '+'
 %left '*' '/'
@@ -55,9 +52,11 @@
 %token              NEWLINE
 %token              UNDEFINED 
 
+%code requires { #include <string_view> }
+
 /* Valid name (Identifiers) */
-%token<std::string> NAME 
-%token<std::string> ESCAPED_NAME  
+%token<std::string_view> NAME 
+%token<std::string_view> ESCAPED_NAME  
 
 %token<verilog::Constant> INTEGER BINARY OCTAL DECIMAL HEX REAL EXP
 
@@ -92,8 +91,8 @@
 %%
 
 valid_name
-  : NAME { $$ = $1; }
-  | ESCAPED_NAME { $$ = $1; }
+  : NAME         { $$.assign($1.data(), $1.size()); }
+  | ESCAPED_NAME { $$.assign($1.data(), $1.size()); }
   ;
 
 design 
@@ -107,22 +106,22 @@ modules
 module
   : MODULE valid_name ';' 
     { 
-      driver->add_module(std::move($2));
+      driver->add_module(std::string($2));
     }
     statements ENDMODULE  
   | MODULE valid_name '(' ')' ';'
     {
-      driver->add_module(std::move($2));
+      driver->add_module(std::string($2));
     }
     statements ENDMODULE
   | MODULE valid_name '(' port_names ')' ';' 
     {
-      driver->add_module(std::move($2));
+      driver->add_module(std::string($2));
     }
     statements ENDMODULE
   | MODULE valid_name '(' 
     { 
-      driver->add_module(std::move($2)); 
+      driver->add_module(std::string($2)); 
     } 
     port_declarations ')' 
     { 
@@ -478,7 +477,6 @@ void verilog::VerilogParser::error(const location_type &l, const std::string &er
   std::cerr << "Parser error: " << err_message  << '\n'
             << "  begin at line " << l.begin.line <<  " col " << l.begin.column  << '\n' 
             << "  end   at line " << l.end.line <<  " col " << l.end.column << "\n";
-  std::abort();
 }
 
 

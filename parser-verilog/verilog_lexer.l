@@ -2,6 +2,7 @@
 /* C++ string header, for string ops below */
 #include <string>
 #include <variant>
+#include <string_view>
 
 /* Implementation of yyFlexScanner */ 
 #include "verilog_scanner.hpp"
@@ -18,7 +19,7 @@ using token = verilog::VerilogParser::token;
 #define YY_NO_UNISTD_H
 
 /* update location on matching */
-#define YY_USER_ACTION loc->step(); loc->columns(yyleng);
+#define YY_USER_ACTION do { loc->columns(yyleng); } while(0);
 %}
 
 /* Make the generated scanner run in debug mode. */
@@ -35,8 +36,10 @@ using token = verilog::VerilogParser::token;
 
 /* Suppress the warning message yyunput is defined but not used */
 %option nounput
+%option noinput
 %option never-interactive
 %option c++
+%option 8bit
 
 /* Define inclusive/exclusive states */
 %x in_comment 
@@ -53,7 +56,7 @@ ATTRIBUTE_BEGIN "(*"
 ATTRIBUTE_END   "*)"
 
 /* Name rule http://www.asic-world.com/verilog/syntax1.html */
-NAME           [_a-zA-Z][$_a-zA-Z0-9]*{0,1023}
+NAME           [_a-zA-Z][$_a-zA-Z0-9]{0,1023}
 /* 
    Check the escape rule inside character class 
    https://www.regular-expressions.info/charclass.html
@@ -123,18 +126,13 @@ trior     { return token::TRIOR; }
 triand    { return token::TRIAND; }
 SUPPLY0   { return token::SUPPLY0; }
 SUPPLY1   { return token::SUPPLY1; }
+supply0   { return token::SUPPLY0; }
+supply1   { return token::SUPPLY1; }
 assign    { return token::ASSIGN; }
 
 
-{ESCAPED_NAME}  { 
-  yylval->build<std::string>(yytext);
-  return token::ESCAPED_NAME;
-}
-
-{NAME} { 
-  yylval->build<std::string>( yytext );
-  return token::NAME;
-}
+{ESCAPED_NAME} { yylval->build<std::string_view>(std::string_view(yytext, yyleng)); return token::ESCAPED_NAME; }
+{NAME}         { yylval->build<std::string_view>(std::string_view(yytext, yyleng)); return token::NAME; }
 
 {INTEGER} {
             yylval->build<verilog::Constant>(verilog::Constant(yytext, verilog::ConstantType::INTEGER)); 
@@ -161,18 +159,15 @@ assign    { return token::ASSIGN; }
         return token::HEX;
       }
 
-{REAL} {
-         verilog::Constant c(yytext, verilog::ConstantType::REAL);
-         return token::REAL;
+{REAL} { 
+        yylval->build<verilog::Constant>(verilog::Constant(yytext, verilog::ConstantType::REAL));
+        return token::REAL; 
        }
 
-{EXP} {
-        verilog::Constant c(yytext, verilog::ConstantType::EXP);
-        return token::EXP;
-      }
-
-
-
+{EXP}  { 
+  yylval->build<verilog::Constant>(verilog::Constant(yytext, verilog::ConstantType::EXP));
+  return token::EXP;
+       }
 
 . {  
     /* Last rule catches any unmatched character */
