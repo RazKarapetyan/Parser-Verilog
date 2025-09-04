@@ -65,7 +65,7 @@
 
 
 /* Nonterminal Symbols */
-%type<std::string> valid_name  
+%type<verilog::NameId> valid_name  
 
 %type<std::pair<verilog::PortDirection, verilog::ConnectionType>> port_type 
 %type<verilog::Port> port_declarations port_decl port_decl_statements
@@ -75,15 +75,15 @@
 
 %type<verilog::Constant> constant
 %type<verilog::Assignment> assignment 
-%type<std::vector<std::variant<std::string, verilog::NetBit, verilog::NetRange>>> lhs lhs_concat lhs_exprs lhs_expr
+%type<std::vector<std::variant<verilog::NameId, verilog::NetBit, verilog::NetRange>>> lhs lhs_concat lhs_exprs lhs_expr
 %type<std::vector<verilog::NetConcat>> rhs rhs_concat rhs_exprs rhs_expr 
 
 %type<verilog::Instance> instance  
-%type<std::pair<std::vector<std::variant<std::string, NetBit, NetRange>>, std::vector<std::vector<verilog::NetConcat>>>> inst_pins nets_by_name 
+%type<std::pair<std::vector<std::variant<verilog::NameId, NetBit, NetRange>>, std::vector<std::vector<verilog::NetConcat>>>> inst_pins nets_by_name 
 
 %type<std::vector<std::vector<verilog::NetConcat>>> nets_by_position
 
-%type<std::pair<std::variant<std::string, NetBit, NetRange>, std::vector<verilog::NetConcat>>> net_by_name 
+%type<std::pair<std::variant<verilog::NameId, NetBit, NetRange>, std::vector<verilog::NetConcat>>> net_by_name 
 
 %locations 
 %start design
@@ -91,8 +91,8 @@
 %%
 
 valid_name
-  : NAME         { $$.assign($1.data(), $1.size()); }
-  | ESCAPED_NAME { $$.assign($1.data(), $1.size()); }
+  : NAME         { $$ = driver->intern().id_of($1); }
+  | ESCAPED_NAME { $$ = driver->intern().id_of($1); }
   ;
 
 design 
@@ -106,22 +106,22 @@ modules
 module
   : MODULE valid_name ';' 
     { 
-      driver->add_module(std::string($2));
+      driver->add_module($2);
     }
     statements ENDMODULE  
   | MODULE valid_name '(' ')' ';'
     {
-      driver->add_module(std::string($2));
+      driver->add_module($2);
     }
     statements ENDMODULE
   | MODULE valid_name '(' port_names ')' ';' 
     {
-      driver->add_module(std::string($2));
+      driver->add_module($2);
     }
     statements ENDMODULE
   | MODULE valid_name '(' 
     { 
-      driver->add_module(std::string($2)); 
+      driver->add_module($2); 
     } 
     port_declarations ')' 
     { 

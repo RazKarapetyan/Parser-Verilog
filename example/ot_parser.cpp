@@ -12,11 +12,11 @@ struct Gate {
 
 // Struct: Module
 struct Module {
-  std::string name;
-  std::vector<std::string> ports;
-  std::vector<std::string> wires;
-  std::vector<std::string> inputs;
-  std::vector<std::string> outputs;
+  verilog::NameId          name;
+  std::vector<verilog::NameId> ports;
+  std::vector<verilog::NameId> wires;
+  std::vector<verilog::NameId> inputs;
+  std::vector<verilog::NameId> outputs;
   std::vector<Gate> gates;
 };
 
@@ -26,7 +26,7 @@ struct OpenTimerParser : public verilog::ParserVerilogInterface {
   OpenTimerParser() = default;
   virtual ~OpenTimerParser(){}
 
-  void add_module(std::string&& name){ module.name = std::move(name); }
+  void add_module(verilog::NameId name){ module.name = std::move(name); }
 
   void add_port(verilog::Port&& port) {
     if(port.dir == verilog::PortDirection::INPUT) {

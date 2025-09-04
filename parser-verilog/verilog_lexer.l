@@ -130,7 +130,6 @@ supply0   { return token::SUPPLY0; }
 supply1   { return token::SUPPLY1; }
 assign    { return token::ASSIGN; }
 
-
 {ESCAPED_NAME} { yylval->build<std::string_view>(std::string_view(yytext, yyleng)); return token::ESCAPED_NAME; }
 {NAME}         { yylval->build<std::string_view>(std::string_view(yytext, yyleng)); return token::NAME; }
 

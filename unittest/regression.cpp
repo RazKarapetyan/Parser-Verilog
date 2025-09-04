@@ -9,7 +9,7 @@
 struct VerilogParser : public verilog::ParserVerilogInterface {
   virtual ~VerilogParser(){}
 
-  void add_module(std::string&& name){}
+  void add_module(verilog::NameId name){}
   void add_port(verilog::Port&& port) {}  
   void add_net(verilog::Net&& net) {}  
   void add_assignment(verilog::Assignment&& ast) {}  

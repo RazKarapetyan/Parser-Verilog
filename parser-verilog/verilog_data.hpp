@@ -6,10 +6,54 @@
 #include <fstream>
 #include <iostream>
 #include <variant>
+#include <string_view>
+#include <unordered_map>
 #include <experimental/filesystem>
-
-
+#include <string>
+#include <string_view>
+#include <vector>
+#include <unordered_map>
+#include <cstdint>
 namespace verilog {
+
+// struct InternTable {
+//   std::vector<std::string> pool;                   // owns storage
+//   std::unordered_map<std::string_view, NameId> map;
+
+//   NameId id_of(std::string_view sv) {
+//     auto it = map.find(sv);
+//     if (it != map.end()) return it->second;
+//     NameId id = static_cast<NameId>(pool.size());
+//     pool.emplace_back(sv);                         // copy once
+//     std::string_view key{pool.back().data(), pool.back().size()};
+//     map.emplace(key, id);
+//     return id;
+//   }
+//   const std::string& str(NameId id) const { return pool[id]; }
+// };
+
+using NameId = uint32_t;
+
+struct InternTable {
+  std::unordered_map<std::string, NameId> map;  // no transparent functors needed
+  std::vector<const std::string*> id2ptr;
+
+  void reserve(size_t n){ map.reserve(n); id2ptr.reserve(n); }
+
+  NameId id_of(std::string_view sv) {
+    // C++17: find requires key_type; use a temporary std::string
+    auto it = map.find(std::string(sv));
+    if (it != map.end()) return it->second;
+
+    NameId id = static_cast<NameId>(id2ptr.size());
+    auto [node_it, inserted] = map.emplace(std::string(sv), id);
+    id2ptr.push_back(&node_it->first);
+    return id;
+  }
+
+  std::string_view view(NameId id) const { return *id2ptr[id]; }
+  const std::string& str(NameId id) const { return *id2ptr[id]; }
+};
 
   enum class ConstantType {
     NONE,
@@ -78,7 +122,7 @@ namespace verilog {
   } 
 
   struct Port {
-    std::vector<std::string> names;
+    std::vector<NameId> names;
     int beg {-1};
     int end {-1};
     PortDirection dir;
@@ -124,7 +168,7 @@ namespace verilog {
   } 
 
   struct Net {
-    std::vector<std::string> names;
+    std::vector<NameId> names;
     int beg {-1};
     int end {-1};
     NetType type {NetType::NONE};
@@ -140,8 +184,8 @@ namespace verilog {
   }
 
   struct NetBit {
-    NetBit(std::string&& n, int b): name(std::move(n)), bit(b) {}
-    std::string name;
+    NetBit(NameId n, int b): name(std::move(n)), bit(b) {}
+    NameId name;
     int bit {-1};
   };
 
@@ -151,8 +195,8 @@ namespace verilog {
   }
 
   struct NetRange {
-    NetRange(std::string&& n, int b, int e): name(std::move(n)), beg(b), end(e) {}
-    std::string name;
+    NetRange(NameId n, int b, int e): name(std::move(n)), beg(b), end(e) {}
+    NameId name;
     int beg {-1};
     int end {-1};
   };
@@ -164,10 +208,10 @@ namespace verilog {
   
   struct Assignment {
     // Left hand side can be: a wire, a bit in a wire, a part of a wire  
-    std::vector<std::variant<std::string, NetBit, NetRange>> lhs;
+    std::vector<std::variant<NameId, NetBit, NetRange>> lhs;
 
     // Right hand side can be: a wire, a bit in a wire, a part of a wire, a constant
-    std::vector<std::variant<std::string, NetBit, NetRange, Constant>> rhs;
+    std::vector<std::variant<NameId, NetBit, NetRange, Constant>> rhs;
   };
 
   inline std::ostream& operator<<(std::ostream& os, const Assignment& ast) {  
@@ -197,14 +241,14 @@ namespace verilog {
     return os;  
   }
 
-  using NetConcat = std::variant<std::string, NetBit, NetRange, Constant>;
+  using NetConcat = std::variant<NameId, NetBit, NetRange, Constant>;
 
   struct Instance {
-    std::string module_name;
-    std::string inst_name;
+    NameId module_name;
+    NameId inst_name;
   
     // pin_names might be empty. e.g. my_module m1(net1, net2);
-    std::vector<std::variant<std::string, NetBit, NetRange>> pin_names;
+    std::vector<std::variant<NameId, NetBit, NetRange>> pin_names;
     std::vector<std::vector<NetConcat>> net_names;
   };
 

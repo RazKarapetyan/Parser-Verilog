@@ -6,7 +6,7 @@
 struct SampleParser : public verilog::ParserVerilogInterface {
   virtual ~SampleParser(){}
 
-  void add_module(std::string&& name){
+  void add_module(verilog::NameId name){
     std::cout << "Module name = " << name << '\n';
   }
 

@@ -6,6 +6,7 @@
 #include <fstream>
 #include <variant>
 #include <unordered_map>
+#include <string_view>
 #include <filesystem>
 
 #include "verilog_scanner.hpp"
@@ -19,7 +20,7 @@ class ParserVerilogInterface {
       if(_scanner) delete _scanner;
       if(_parser) delete _parser;
     }
-    virtual void add_module(std::string&&) = 0;
+    virtual void add_module(NameId) = 0;
     // port names, begin index, end index, port type (IOB), connection type (wire, reg)
     virtual void add_port(Port&&) = 0;
     virtual void add_net(Net&&) = 0;
@@ -27,10 +28,13 @@ class ParserVerilogInterface {
     virtual void add_instance(Instance&&) = 0;
 
     int read(const std::filesystem::path&); 
+    InternTable& intern() { return intern_; }
+    const InternTable& intern() const { return intern_; }
 
   private:
     VerilogScanner* _scanner {nullptr};
     VerilogParser*  _parser {nullptr};
+    InternTable     intern_;
 };
 
 inline int ParserVerilogInterface::read(const std::filesystem::path& p){
