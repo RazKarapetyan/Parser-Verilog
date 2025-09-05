@@ -1,4 +1,5 @@
 #include <iostream>
+#include <fstream>
 
 #include "verilog_driver.hpp" 
 
@@ -94,9 +95,12 @@ int main(const int argc, const char **argv){
     return EXIT_FAILURE;
   }
   
-  if(std::filesystem::exists(argv[1])) { 
-    OpenTimerParser parser;
-    parser.read(argv[1]);
+  std::ifstream f(argv[1]);
+  if (!f.good()) {
+      return -1;  // file does not exist or cannot be opened
   }
+  
+  OpenTimerParser parser;
+  parser.read(argv[1]);
   return EXIT_SUCCESS;
 }

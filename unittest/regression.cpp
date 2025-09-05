@@ -17,25 +17,6 @@ struct VerilogParser : public verilog::ParserVerilogInterface {
 };
 
 
-int main(const int argc, const char **argv){
-  std::cout << std::setw(10) << ' '
-            << std::setw(20) << "[Benchmark]"
-            << std::setw(13) << "[Runtime]" << '\n';
-  std::cout << std::string(45, '-') << '\n';
-
-  for(const auto&p : std::filesystem::directory_iterator("../benchmark/")){
-
-    std::cout << std::setw(10) << "Parsing " 
-              << std::setw(20) << p.path().filename().string() ;
-
-    VerilogParser parser;
-    auto t1 = std::chrono::high_resolution_clock::now();
-    parser.read(p);
-    auto t2 = std::chrono::high_resolution_clock::now();
-
-    std::cout << std::setw(13) 
-              << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count()/1000.0f << "ms\n";
-  }
-
+int main(const int argc, const char **argv) {
   return( EXIT_SUCCESS );
 }

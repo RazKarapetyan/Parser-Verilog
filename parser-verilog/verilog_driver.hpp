@@ -7,7 +7,6 @@
 #include <variant>
 #include <unordered_map>
 #include <string_view>
-#include <filesystem>
 
 #include "verilog_scanner.hpp"
 #include "verilog_parser.tab.hh"
@@ -27,7 +26,7 @@ class ParserVerilogInterface {
     virtual void add_assignment(Assignment&&) = 0;
     virtual void add_instance(Instance&&) = 0;
 
-    int read(const std::filesystem::path&); 
+    int read(const std::string&); 
     InternTable& intern() { return intern_; }
     const InternTable& intern() const { return intern_; }
 
@@ -37,12 +36,11 @@ class ParserVerilogInterface {
     InternTable     intern_;
 };
 
-inline int ParserVerilogInterface::read(const std::filesystem::path& p){
-  if(! std::filesystem::exists(p)){
-    return -1;
+inline int ParserVerilogInterface::read(const std::string& path){
+  std::ifstream ifs(path);
+  if (!ifs.good()) {
+    return -1;  // file does not exist or cannot be opened
   }
-
-  std::ifstream ifs(p);
 
   if(!_scanner){
     _scanner = new VerilogScanner(&ifs);

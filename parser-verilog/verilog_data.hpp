@@ -8,29 +8,12 @@
 #include <variant>
 #include <string_view>
 #include <unordered_map>
-#include <experimental/filesystem>
 #include <string>
 #include <string_view>
 #include <vector>
 #include <unordered_map>
 #include <cstdint>
 namespace verilog {
-
-// struct InternTable {
-//   std::vector<std::string> pool;                   // owns storage
-//   std::unordered_map<std::string_view, NameId> map;
-
-//   NameId id_of(std::string_view sv) {
-//     auto it = map.find(sv);
-//     if (it != map.end()) return it->second;
-//     NameId id = static_cast<NameId>(pool.size());
-//     pool.emplace_back(sv);                         // copy once
-//     std::string_view key{pool.back().data(), pool.back().size()};
-//     map.emplace(key, id);
-//     return id;
-//   }
-//   const std::string& str(NameId id) const { return pool[id]; }
-// };
 
 using NameId = uint32_t;
 
