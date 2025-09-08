@@ -12,22 +12,25 @@ struct SampleParser : public verilog::ParserVerilogInterface {
   }
 
   void add_port(verilog::Port&& port) {
-    std::cout << "Port: " << port << '\n';
+    print(std::cout, port, intern()) << '\n';
     ports.push_back(std::move(port));
   }  
 
   void add_net(verilog::Net&& net) {
-    std::cout << "Net: " << net << '\n';
+    std::cout << "Net: ";
+    print(std::cout, net, intern()) << '\n';
     nets.push_back(std::move(net));
   }  
 
   void add_assignment(verilog::Assignment&& ast) {
-    std::cout << "Assignment: " << ast << '\n';
+    std::cout << "Assignment: ";
+    print(std::cout, ast, intern()) << '\n';
     assignments.push_back(std::move(ast));
   }  
 
   void add_instance(verilog::Instance&& inst) {
-    std::cout << "Instance: " << inst << '\n';
+    std::cout << "Instance: ";
+    print(std::cout, inst, intern()) << '\n';
     insts.push_back(std::move(inst));
   }
   
